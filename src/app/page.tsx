@@ -12,6 +12,8 @@ export default function Home() {
   const router = useRouter()
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
+  const [submitting, setSubmitting] = useState(false)
+  const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
     const user = typeof window !== "undefined" ? localStorage.getItem("mockUser") : null
@@ -20,14 +22,35 @@ export default function Home() {
     }
   }, [])
 
-  function onSignIn(e: React.FormEvent) {
+  async function onSignIn(e: React.FormEvent) {
     e.preventDefault()
     if (!email) return
-    localStorage.setItem(
-      "mockUser",
-      JSON.stringify({ email, name: email.split("@")[0], id: "u1" })
-    )
-    router.push("/dashboard")
+    setSubmitting(true)
+    setError(null)
+    try {
+      // Create or find user in DB and store id for later pages
+      const res = await fetch("/api/users/upsert", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: email.trim(), name: email.split("@")[0] })
+      })
+
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}))
+        throw new Error(data?.error || "Failed to sign in")
+      }
+
+      const user = await res.json()
+      localStorage.setItem(
+        "mockUser",
+        JSON.stringify({ email: user.email, name: user.name, id: String(user.id) })
+      )
+      router.push("/dashboard")
+    } catch (err: any) {
+      setError(err?.message || "Something went wrong")
+    } finally {
+      setSubmitting(false)
+    }
   }
 
   return (
@@ -65,7 +88,7 @@ export default function Home() {
             <Card>
               <CardHeader>
                 <CardTitle>Sign in</CardTitle>
-                <CardDescription>Use mock auth to get into the dashboard.</CardDescription>
+                <CardDescription>Sign in creates your account in the database.</CardDescription>
               </CardHeader>
               <CardContent>
                 <form onSubmit={onSignIn} className="grid gap-4">
@@ -77,8 +100,13 @@ export default function Home() {
                     <Label htmlFor="password">Password</Label>
                     <Input id="password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="••••••••" required />
                   </div>
-                  <Button type="submit" className="w-full">Continue</Button>
-                  <p className="text-xs text-muted-foreground">No backend yet. Your session is stored locally.</p>
+                  {error ? (
+                    <p className="text-sm text-destructive">{error}</p>
+                  ) : null}
+                  <Button type="submit" className="w-full" disabled={submitting}>
+                    {submitting ? "Signing in..." : "Continue"}
+                  </Button>
+                  <p className="text-xs text-muted-foreground">We store your session locally and your profile in the database.</p>
                 </form>
               </CardContent>
             </Card>
