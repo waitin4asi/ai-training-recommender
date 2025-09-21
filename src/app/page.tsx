@@ -1,57 +1,12 @@
 "use client"
 
 import Link from "next/link"
-import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
 
 export default function Home() {
   const router = useRouter()
-  const [email, setEmail] = useState("")
-  const [password, setPassword] = useState("")
-  const [submitting, setSubmitting] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-
-  useEffect(() => {
-    const user = typeof window !== "undefined" ? localStorage.getItem("mockUser") : null
-    if (user) {
-      // already signed in; keep on homepage but could redirect
-    }
-  }, [])
-
-  async function onSignIn(e: React.FormEvent) {
-    e.preventDefault()
-    if (!email) return
-    setSubmitting(true)
-    setError(null)
-    try {
-      // Create or find user in DB and store id for later pages
-      const res = await fetch("/api/users/upsert", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: email.trim(), name: email.split("@")[0] })
-      })
-
-      if (!res.ok) {
-        const data = await res.json().catch(() => ({}))
-        throw new Error(data?.error || "Failed to sign in")
-      }
-
-      const user = await res.json()
-      localStorage.setItem(
-        "mockUser",
-        JSON.stringify({ email: user.email, name: user.name, id: String(user.id) })
-      )
-      router.push("/dashboard")
-    } catch (err: any) {
-      setError(err?.message || "Something went wrong")
-    } finally {
-      setSubmitting(false)
-    }
-  }
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -62,7 +17,9 @@ export default function Home() {
             <Link href="/dashboard" className="text-sm hover:underline">Dashboard</Link>
             <Link href="/recommendations" className="text-sm hover:underline">Recommendations</Link>
             <Link href="/analytics" className="text-sm hover:underline">Analytics</Link>
-            <Button asChild size="sm"><Link href="/dashboard">Open App</Link></Button>
+            <Link href="/login" className="text-sm hover:underline">Login</Link>
+            <Link href="/register" className="text-sm hover:underline">Register</Link>
+            <Button asChild size="sm"><Link href="/login">Open App</Link></Button>
           </nav>
         </div>
       </header>
@@ -87,27 +44,15 @@ export default function Home() {
             </div>
             <Card>
               <CardHeader>
-                <CardTitle>Sign in</CardTitle>
-                <CardDescription>Sign in creates your account in the database.</CardDescription>
+                <CardTitle>Get started</CardTitle>
+                <CardDescription>Create an account or sign in to continue.</CardDescription>
               </CardHeader>
               <CardContent>
-                <form onSubmit={onSignIn} className="grid gap-4">
-                  <div className="grid gap-2">
-                    <Label htmlFor="email">Email</Label>
-                    <Input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@example.com" required />
-                  </div>
-                  <div className="grid gap-2">
-                    <Label htmlFor="password">Password</Label>
-                    <Input id="password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="••••••••" required />
-                  </div>
-                  {error ? (
-                    <p className="text-sm text-destructive">{error}</p>
-                  ) : null}
-                  <Button type="submit" className="w-full" disabled={submitting}>
-                    {submitting ? "Signing in..." : "Continue"}
-                  </Button>
-                  <p className="text-xs text-muted-foreground">We store your session locally and your profile in the database.</p>
-                </form>
+                <div className="grid gap-3">
+                  <Button asChild className="w-full"><Link href="/login">Sign in</Link></Button>
+                  <Button asChild variant="outline" className="w-full"><Link href="/register">Create account</Link></Button>
+                  <p className="text-xs text-muted-foreground text-center">Secure authentication powered by better-auth.</p>
+                </div>
               </CardContent>
             </Card>
           </div>

@@ -15,6 +15,13 @@
       "when": 1758458065223,
       "tag": "0001_stormy_screwball",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1758458563887,
+      "tag": "0002_mute_lilith",
+      "breakpoints": true
     }
   ]
 }
